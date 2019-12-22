@@ -9,7 +9,7 @@
   "snowworld.config.driftarea": "Snow drift area size",
   "snowworld.config.driftarea.comment": "Number of blocks to increase the snow level at around a snow accumulation event [1 = single block, 5 = a + sign, 9 = all around].",
   "snowworld.config.maxlayers": "Max amount of layers",
-  "snowworld.config.maxlayers.comment": "Max snow layers to accumulate during snowfall, 8 layers per block [0 = disabled, 8 = full block].",
+  "snowworld.config.maxlayers.comment": "Max snow layers to accumulate during snowfall, 8 layers per block [0 = disabled, 8 = full block, -1 = no max, keep on growing].",
   "snowworld.config.meltrate": "Melt rate",
   "snowworld.config.meltrate.comment": "How quickly snow melts [400 = slow, 20 = fast].",
   "snowworld.config.minlayers": "Min amount of layers in snow biomes",

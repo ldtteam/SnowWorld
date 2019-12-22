@@ -27,7 +27,7 @@ public class CommonConfiguration extends AbstractConfiguration {
         accumulationRate = defineInteger(builder, "accumulationrate", 200, 10, 200);
         smoothing = defineInteger(builder , "smoothing", 2, 0, 4);
         snowDriftArea = defineInteger(builder, "driftarea", 5, 1, 9);
-        maxSnowLayers = defineInteger(builder, "maxlayers", 8, 0, 8);
+        maxSnowLayers = defineInteger(builder, "maxlayers", -1, -1, Integer.MAX_VALUE);
         snowMeltRate = defineInteger(builder, "meltrate", 400, 20, 400);
         snowMinLayers = defineInteger(builder, "minlayers", 1, 0, 8);
 

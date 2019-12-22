@@ -3,22 +3,34 @@ package com.ldtteam.snowworld.events.handler;
 import java.util.Iterator;
 import java.util.Random;
 
+import com.ldtteam.snowworld.config.Configuration;
+import com.ldtteam.snowworld.util.Constants;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.SnowBlock;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ServerWorld;
 
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WorldTickEventHandler {
 
     private static Random r = new Random();
 
     @SubscribeEvent
     public static void onWorldTick(TickEvent.WorldTickEvent event) {
+        if (event.phase == TickEvent.Phase.END)
+            return;
+
         if (!(event.world instanceof ServerWorld))
             return;
 
@@ -60,10 +72,12 @@ public class WorldTickEventHandler {
     }
 
     private static void onTickSnowDecrease(ServerWorld world) {
-        for (Iterator<Chunk> iterator = world.getChunkProvider().chunkManager.getLoadedChunkIterator(); iterator.hasNext();) {
-            Chunk chunk = iterator.next();
+        for (final ChunkHolder iterator : world.getChunkProvider().chunkManager.getLoadedChunksIterable()) {
+            Chunk chunk = iterator.func_219298_c();
+            if (chunk == null)
+                continue;
 
-            if (r.nextInt(Config.snowMeltRate) != 0) {
+            if (r.nextInt(Configuration.getInstance().getCommonConfiguration().snowMeltRate.get()) != 0) {
                 continue;
             }
 
@@ -73,36 +87,38 @@ public class WorldTickEventHandler {
 
             int layers = snowHeightAt(world, pos);
 
-            if (layers <= Config.snowMinLayers) {
+            if (layers <= Configuration.getInstance().getCommonConfiguration().snowMinLayers.get()) {
                 continue;
             }
 
             if (layers % 8 != 1) {
                 // decrement layer
-                world.setBlockState(pos, Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, (layers-1)%8));
+                world.setBlockState(pos, Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, (layers-1)%8));
             } else {
                 //remove last layer
-                world.setBlockToAir(pos);
+                world.setBlockState(pos, Blocks.AIR.getDefaultState());
             }
         }
     }
 
-    private static void onTickSnowIncrease(WorldServer world) {
-        int baseRate = Config.accumulationRate;
+    private static void onTickSnowIncrease(ServerWorld world) {
+        int baseRate = Configuration.getInstance().getCommonConfiguration().accumulationRate.get();
 
         if (world.isThundering()) {
             baseRate /= 2;
         }
 
 
-        for (Iterator<Chunk> iterator = world.getPersistentChunkIterable(world.getPlayerChunkMap().getChunkIterator()); iterator.hasNext();) {
-            Chunk chunk = iterator.next();
+        for (final ChunkHolder iterator : world.getChunkProvider().chunkManager.getLoadedChunksIterable()) {
+            Chunk chunk = iterator.func_219298_c();
+            if (chunk == null)
+                continue;
 
             if (r.nextInt(baseRate) != 0) {
                 continue;
             }
 
-            if (!world.provider.canDoRainSnowIce(chunk)) {
+            if (!world.dimension.canDoRainSnowIce(chunk)) {
                 continue;
             }
 
@@ -112,17 +128,17 @@ public class WorldTickEventHandler {
             int layers = snowHeightAt(world, pos);
 
             int surroundingAtLayer = 0;
-            for(EnumFacing side : EnumFacing.HORIZONTALS){
+            for(Direction side : Direction.Plane.HORIZONTAL){
                 if (snowHeightAt(world, getSnowTopPosition(world, pos.offset(side))) >= layers) {
                     surroundingAtLayer++;
                 }
             }
 
-            if (surroundingAtLayer < Config.smoothing) {
+            if (surroundingAtLayer < Configuration.getInstance().getCommonConfiguration().smoothing.get()) {
                 continue;
             }
 
-            switch(Config.snowDriftArea) {
+            switch(Configuration.getInstance().getCommonConfiguration().snowDriftArea.get()) {
             case 9:
                 incrementSnowHeight(world, pos.north().east());
             case 8:
@@ -145,38 +161,45 @@ public class WorldTickEventHandler {
         }
     }
 
-    private static void incrementSnowHeight(WorldServer world, BlockPos pos) {
+    private static void incrementSnowHeight(ServerWorld world, BlockPos pos) {
         pos = getSnowTopPosition(world, pos);
 
         int layers = snowHeightAt(world, pos);
 
         // Check if we can snow here if this is the first snow layer
-        if(layers == 0 && !world.canSnowAt(pos, true)) {
+        if(layers == 0 && !canSnowAt(world, pos)) {
             return;
         } else if (!isSnowyArea(world, pos)) {
             return;
         }
 
-        if (layers >= Config.maxSnowLayers ) {
+        if (layers >= Configuration.getInstance().getCommonConfiguration().maxSnowLayers.get() && Configuration.getInstance().getCommonConfiguration().maxSnowLayers.get() > -1) {
             return;
         }
 
         if (layers == 0 || layers % 8 != 0) {
             // Continue stacking on current stack
-            world.setBlockState(pos, Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers%8+1));
+            world.setBlockState(pos, Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, layers%8+1));
         } else {
             // Add onto stack on block above, this one is full
-            world.setBlockState(pos.up(), Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, layers%8+1));
+            world.setBlockState(pos.up(), Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, layers%8+1));
         }
     }
-    private static int snowHeightAt(WorldServer world, BlockPos pos) {
-        IBlockState currentBlock = world.getBlockState(pos);
-        if (currentBlock.getBlock() == Blocks.SNOW_LAYER) {
-            return snowHeightAt(world, pos.down()) + currentBlock.getValue(BlockSnow.LAYERS);
+
+    private static int snowHeightAt(ServerWorld world, BlockPos pos) {
+        BlockState currentState = world.getBlockState(pos);
+        if (currentState.getBlock() == Blocks.SNOW) {
+            return snowHeightAt(world, pos.down()) + currentState.get(SnowBlock.LAYERS);
         }
-        if (currentBlock.getBlock() == Blocks.AIR && world.getBlockState(pos.down()).getBlock() != Blocks.AIR) {
+        if (currentState.getBlock() == Blocks.AIR && world.getBlockState(pos.down()).getBlock() != Blocks.AIR) {
             return snowHeightAt(world, pos.down());
         }
         return 0;
+    }
+
+    private static boolean canSnowAt(ServerWorld world, BlockPos pos)
+    {
+        Biome biome = world.getBiome(pos);
+        return true; // biome.doesSnowGenerate(world, pos);
     }
 }

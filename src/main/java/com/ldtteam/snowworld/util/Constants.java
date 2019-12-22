@@ -2,5 +2,5 @@ package com.ldtteam.snowworld.util;
 
 public class Constants {
 
-    public static String MOD_ID = "snowworld";
+    public static final String MOD_ID = "snowworld";
 }

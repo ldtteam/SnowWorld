@@ -2,6 +2,7 @@ package com.ldtteam.snowworld;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.world.biome.Biome;
 
 import com.ldtteam.snowworld.config.Configuration;
 import com.ldtteam.snowworld.util.LanguageHandler;
@@ -16,6 +17,7 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,6 +41,9 @@ public class SnowWorld {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
+        ForgeRegistries.BIOMES.getValues().forEach(biome -> {
+            biome.precipitation = Biome.RainType.SNOW;
+        });
     }
 
 }
