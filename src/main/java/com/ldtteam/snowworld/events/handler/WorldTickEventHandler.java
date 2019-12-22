@@ -1,6 +1,5 @@
 package com.ldtteam.snowworld.events.handler;
 
-import java.util.Iterator;
 import java.util.Random;
 
 import com.ldtteam.snowworld.config.Configuration;
@@ -8,7 +7,9 @@ import com.ldtteam.snowworld.util.Constants;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.apache.logging.log4j.core.jmx.Server;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
@@ -65,6 +66,20 @@ public class WorldTickEventHandler {
         }
 
         return pos;
+    }
+
+    private static BlockPos getIceTopPosition(ServerWorld world, BlockPos pos) {
+        BlockPos blockPos = getSnowTopPosition(world, pos);
+        while (world.getBlockState(blockPos).getBlock() == Blocks.SNOW) {
+            blockPos.down();
+        }
+
+        if (world.getBlockState(blockPos).getBlock() != Blocks.ICE)
+        {
+            return new BlockPos(-1, -1, -1);
+        }
+
+        return blockPos;
     }
 
     private static boolean isSnowyArea(ServerWorld world, BlockPos pos) {
@@ -184,6 +199,12 @@ public class WorldTickEventHandler {
             // Add onto stack on block above, this one is full
             world.setBlockState(pos.up(), Blocks.SNOW.getDefaultState().with(SnowBlock.LAYERS, layers%8+1));
         }
+
+        if (canSnowTurnIntoIce(world, pos))
+        {
+            final BlockPos icePos = findLowestSnowBlockOfTopStack(world, pos);
+            world.setBlockState(icePos, Blocks.ICE.getDefaultState(), 6);
+        }
     }
 
     private static int snowHeightAt(ServerWorld world, BlockPos pos) {
@@ -197,9 +218,70 @@ public class WorldTickEventHandler {
         return 0;
     }
 
+    private static int iceHeightAt(ServerWorld world, BlockPos pos) {
+        BlockPos blockPos = findLowestSnowBlockOfTopStack(world, pos).down();
+        if (world.getBlockState(blockPos).getBlock() == Blocks.ICE)
+            return 0;
+
+        int count = 0;
+        while (world.getBlockState(blockPos).getBlock() == Blocks.ICE)
+        {
+            count++;
+            blockPos = blockPos.down();
+        }
+
+        return count;
+    }
+
+    private static BlockPos findLowestSnowBlockOfTopStack(ServerWorld world, BlockPos pos) {
+        BlockPos workingPos = getSnowTopPosition(world, pos);
+        while(world.getBlockState(workingPos).getBlock() == Blocks.SNOW)
+        {
+            workingPos = workingPos.down();
+        }
+
+        return workingPos.up();
+    }
+
+    private static BlockPos findLowestIceBlockOfTopStack(ServerWorld world, BlockPos pos) {
+        BlockPos workingPos = getIceTopPosition(world, pos);
+
+    }
+
     private static boolean canSnowAt(ServerWorld world, BlockPos pos)
     {
         Biome biome = world.getBiome(pos);
         return true; // biome.doesSnowGenerate(world, pos);
+    }
+
+    private static boolean canSnowTurnIntoIce(ServerWorld world, BlockPos pos)
+    {
+        final int snowHeight = snowHeightAt(world, pos);
+        if (snowHeight < Configuration.getInstance().getCommonConfiguration().minLayersForIce.get()) {
+            return false;
+        }
+
+
+        final BlockPos targetPos = findLowestSnowBlockOfTopStack(world, pos);
+
+        for (final Direction direction : Direction.Plane.HORIZONTAL) {
+            final BlockPos posToCheck = targetPos.offset(direction);
+            if (!Block.hasSolidSide(world.getBlockState(posToCheck), world, posToCheck, direction.getOpposite()) ||
+                !Block.isOpaque(world.getBlockState(posToCheck).getShape(world, pos))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean canIceTurnIntoPacked(ServerWorld world, BlockPos pos)
+    {
+        final int iceHeight = iceHeightAt(world, pos);
+        if (iceHeight < Configuration.getInstance().getCommonConfiguration().minIceBlocksForPackedIce.get()) {
+            return false;
+        }
+
+
     }
 }

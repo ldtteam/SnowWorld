@@ -41,9 +41,6 @@ public class SnowWorld {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-        ForgeRegistries.BIOMES.getValues().forEach(biome -> {
-            biome.precipitation = Biome.RainType.SNOW;
-        });
     }
 
 }

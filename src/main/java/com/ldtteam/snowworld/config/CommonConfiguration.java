@@ -3,23 +3,15 @@ package com.ldtteam.snowworld.config;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class CommonConfiguration extends AbstractConfiguration {
-    //@Comment({"How quickly snow accumulates [200 = slow, 10 = fast]"})
-    public final ForgeConfigSpec.IntValue accumulationRate; // = 200;
 
-    //@Comment({"How many sides need to be at the same level before more snow is allowed to accumulate [0 = none, 4 = all]"})
-    public final ForgeConfigSpec.IntValue smoothing; // = 2;
-
-    //@Comment({"Number of blocks to increase the snow level at around a snow accumulation event [1 = single block, 5 = a + sign, 9 = all around"})
-    public final ForgeConfigSpec.IntValue snowDriftArea; // = 5;
-
-    //@Comment({"Max snow layers, 8 layers per block"})
-    public final ForgeConfigSpec.IntValue maxSnowLayers; // = 8;
-
-    //@Comment({"How quickly snow melts [400 = slow, 20 = fast]"})
-    public final ForgeConfigSpec.IntValue snowMeltRate; // = 400;
-
-    //@Comment({"Base snow layers to leave when melting"})
-    public final ForgeConfigSpec.IntValue snowMinLayers; // = 1;
+    public final ForgeConfigSpec.IntValue accumulationRate;
+    public final ForgeConfigSpec.IntValue smoothing;
+    public final ForgeConfigSpec.IntValue snowDriftArea;
+    public final ForgeConfigSpec.IntValue maxSnowLayers;
+    public final ForgeConfigSpec.IntValue snowMeltRate;
+    public final ForgeConfigSpec.IntValue snowMinLayers;
+    public final ForgeConfigSpec.IntValue minLayersForIce;
+    public final ForgeConfigSpec.IntValue minIceBlocksForPackedIce;
 
     public CommonConfiguration(final ForgeConfigSpec.Builder builder) {
         createCategory(builder, "snowaccumulation");
@@ -30,7 +22,11 @@ public class CommonConfiguration extends AbstractConfiguration {
         maxSnowLayers = defineInteger(builder, "maxlayers", -1, -1, Integer.MAX_VALUE);
         snowMeltRate = defineInteger(builder, "meltrate", 400, 20, 400);
         snowMinLayers = defineInteger(builder, "minlayers", 1, 0, 8);
+        minLayersForIce = defineInteger(builder, "iceforming", 36, 9, Integer.MAX_VALUE);
+        minIceBlocksForPackedIce = defineInteger(builder, "icepacking", 3, 0, Integer.MAX_VALUE);
 
         finishCategory(builder);
+
+
     }
 }
