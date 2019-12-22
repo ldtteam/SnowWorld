@@ -1,0 +1,17 @@
+{
+  "com.snowworld.configgui.title": "SnowWorld Config",
+  "snowworld.config.snowaccumulation": "Accumulation of Snow Settings",
+  "snowworld.config.snowaccumulation.comment": "All configuration items related to the accumulation of snow in the world.",
+  "snowworld.config.accumulationrate": "Accumulation rate",
+  "snowworld.config.accumulationrate.comment": "How quickly snow accumulates [200 = slow, 10 = fast].",
+  "snowworld.config.smoothing": "Snowfall smoothing",
+  "snowworld.config.smoothing.comment": "How many sides need to be at the same level before more snow is allowed to accumulate [0 = none, 4 = all].",
+  "snowworld.config.driftarea": "Snow drift area size",
+  "snowworld.config.driftarea.comment": "Number of blocks to increase the snow level at around a snow accumulation event [1 = single block, 5 = a + sign, 9 = all around].",
+  "snowworld.config.maxlayers": "Max amount of layers",
+  "snowworld.config.maxlayers.comment": "Max snow layers to accumulate during snowfall, 8 layers per block [0 = disabled, 8 = full block].",
+  "snowworld.config.meltrate": "Melt rate",
+  "snowworld.config.meltrate.comment": "How quickly snow melts [400 = slow, 20 = fast].",
+  "snowworld.config.minlayers": "Min amount of layers in snow biomes",
+  "snowworld.config.minlayers.comment": "Base snow layers to leave when melting [1 = a single layer, 8 = full block]."
+}

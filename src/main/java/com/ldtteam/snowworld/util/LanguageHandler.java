@@ -211,7 +211,7 @@ public final class LanguageHandler
 
         private LanguageCache()
         {
-            final String fileLoc = "assets/structurize/lang/%s.json";
+            final String fileLoc = "assets/snowworld/lang/%s.json";
             load(fileLoc);
         }
 
@@ -221,7 +221,7 @@ public final class LanguageHandler
 
             // Trust me, Minecraft.getInstance() can be null, when you run Data Generators!
             String locale =
-                            DistExecutor.callWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance() == null ? null : Minecraft.getInstance().gameSettings.language);
+                            DistExecutor.callWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().gameSettings.language);
 
             if (locale == null)
             {
