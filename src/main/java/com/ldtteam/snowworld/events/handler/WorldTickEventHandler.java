@@ -13,6 +13,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -204,6 +205,12 @@ public class WorldTickEventHandler {
         {
             final BlockPos icePos = findLowestSnowBlockOfTopStack(world, pos);
             world.setBlockState(icePos, Blocks.ICE.getDefaultState(), 6);
+
+            if (canIceTurnIntoPacked(world, pos))
+            {
+                final BlockPos packedIcedPos = findLowestIceBlockOfTopStack(world, pos);
+                world.setBlockState(packedIcedPos, Blocks.PACKED_ICE.getDefaultState(), 6);
+            }
         }
     }
 
@@ -245,7 +252,12 @@ public class WorldTickEventHandler {
 
     private static BlockPos findLowestIceBlockOfTopStack(ServerWorld world, BlockPos pos) {
         BlockPos workingPos = getIceTopPosition(world, pos);
+        while(world.getBlockState(workingPos).getBlock() == Blocks.ICE)
+        {
+            workingPos.down();
+        }
 
+        return workingPos.up();
     }
 
     private static boolean canSnowAt(ServerWorld world, BlockPos pos)
@@ -266,7 +278,8 @@ public class WorldTickEventHandler {
 
         for (final Direction direction : Direction.Plane.HORIZONTAL) {
             final BlockPos posToCheck = targetPos.offset(direction);
-            if (!Block.hasSolidSide(world.getBlockState(posToCheck), world, posToCheck, direction.getOpposite()) ||
+            final BlockState state = world.getBlockState(posToCheck);
+            if (!(!state.isIn(BlockTags.LEAVES) && Block.isOpaque(state.getShape(world, posToCheck).project(direction.getOpposite()))) ||
                 !Block.isOpaque(world.getBlockState(posToCheck).getShape(world, pos))) {
                 return false;
             }
@@ -282,6 +295,16 @@ public class WorldTickEventHandler {
             return false;
         }
 
+        final BlockPos targetPos = findLowestIceBlockOfTopStack(world, pos);
 
+        for (final Direction direction : Direction.Plane.HORIZONTAL) {
+            final BlockPos posToCheck = targetPos.offset(direction);
+            if (!Block.hasSolidSide(world.getBlockState(posToCheck), world, posToCheck, direction.getOpposite()) ||
+                                !Block.isOpaque(world.getBlockState(posToCheck).getShape(world, pos))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
